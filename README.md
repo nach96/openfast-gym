@@ -1,2 +1,2 @@
 # openfast-gym
-Python interface following Gymnasium standard for OpenFAST Wind Turbine simulator.
+Python environment following [Gymnasium](https://gymnasium.farama.org/index.html) standard API for [OpenFAST](https://github.com/OpenFAST/openfast) Wind Turbine simulator.
