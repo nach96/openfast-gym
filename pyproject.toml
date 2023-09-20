@@ -1,0 +1,22 @@
+# file: pyproject.toml
+
+[build-system]
+requires = [
+    "setuptools >= 65",
+    "wheel >= 0.38",
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "openfast-gym"
+version = "0.1.0"
+authors = [
+  {name = "Inazio Cavero"} # Optional
+]
+dependencies = [
+    "gym",
+]
+
+
+[tool.setuptools.package-data]
+"dependencies" = ["*.dll"]

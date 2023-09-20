@@ -1,0 +1,8 @@
+
+Predictions were generated on 03-Jun-2023 at 11:26:04 using OpenFAST, compiled as a DLL S-Function for Simulink as a 64-bit application using double precision at commit v3.3.0-1-g4e85fa62-dirty
+ linked with  NWTC Subroutine Library; ElastoDyn; InflowWind; AeroDyn; ServoDyn
+
+Description from the FAST input file: IEA 15 MW offshore reference model monopile configuration
+
+Time	Wind1VelX	Wind1VelY	BldPitch1	GenSpeed	TTDspFA	TTDspSS	YawBrTAxp	YawBrTAyp	GenPwr	GenTq
+(s)	(m/s)	(m/s)	(deg)	(rpm)	(m)	(m)	(m/s^2)	(m/s^2)	(kW)	(kN-m)
