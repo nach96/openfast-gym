@@ -1,13 +1,15 @@
-#import cwdpath
 import numpy as np
-from src.openfast_gym.openfast_gym_env import OpenFastEnv
 import pandas as pd
-#import beepy
+import sys
+import os
+current_dir = os.path.dirname(os.path.realpath(__file__))
+sys.path.append(os.path.join(current_dir, "..\\src\\openfast_gym"))
+from fast_gym_base import FastGymBase
 
 #Parameters
-library_path = "C:\\dev_local_repo\\openfast-gym\\dependencies\\openfastlib.dll"
-input_file_name = "C:\\dev_local_repo\\openfast-gym\\example\\FAST_cfg\\IEA-15-240-RWT-Monopile.fst"
-MAX_T = 10
+library_path = "C:\\dev_local_repo\\Cristian_Python_OpenFast\\dependencies\\openfastlib.dll"
+input_file_name = "C:\\dev_local_repo\\Cristian_Python_OpenFast\\FAST_cfg\\IEA-15-240-RWT-Monopile.fst"
+MAX_T = 40
 
 Pg_nom = 15000 #kw
 wg_nom = 7.56 #rpm
@@ -20,7 +22,8 @@ def name_from_date():
     from datetime import datetime
     now = datetime.now()
     date_time = now.strftime("%m_%d_%Y_%H_%M_%S")
-    file_name = "output/data_" + date_time + ".csv"
+    file_name = "data_" + date_time + ".csv"
+    #file_name = "data_" + date_time + ".csv"
     return file_name
 
 def save_results(observations,actions,file_name=name_from_date()):
@@ -30,14 +33,14 @@ def save_results(observations,actions,file_name=name_from_date()):
     result = pd.concat(frames, axis=1)
     result.to_csv(file_name, sep=',', encoding='utf-8')
 
-def pitch_pi(Ref_wg,wg,Kp,Ki,pitch_ini=15.55):
+def pitch_pi(e,Kp,Ki,pitch_ini=15.55):
     #PI controller for pitch
     #Ref_wg is the reference rotor speed
     #wg is the current rotor speed
     #Kp, Ki are the PID gains
 
     #Error
-    e = (Ref_wg-wg)*2*np.pi/60
+    #e = (Ref_wg-wg)*2*np.pi/60
     #Integral
     global e_int
     e_int = e_int + e
@@ -65,45 +68,52 @@ def rate_limiter(u,u_ant,rate):
 
 
 if __name__ == "__main__":
-    env = OpenFastEnv(library_path, input_file_name, MAX_T,Tem_ini,Pitch_ini)
+    #Python OpenFast
+    env = FastGymBase(inputFileName=input_file_name, libraryPath=library_path,  max_time=MAX_T,Tem_ini=Tem_ini,Pitch_ini=Pitch_ini)
     env.reset()
     #Init variables
     e_int = 0
     pitch_pre = Pitch_ini
-    observations = []
-    actions = []
     wg = wg_nom
+    observation=[0,0,0]
+    actions = [0,0]
+    #Log variables
+    obs_dict = {}
+    act_dict = {}
+    log_observations = []
+    log_actions = []
 
     terminated=False
     i = 0
+
     while (terminated==False):
-        #Declare Dictionary action with fields Tq and pitch
-        action = {}
-        action["Tq"] = Tem_ini    #Torque in Nm
-        action["pitch"] = pitch_pi(Ref_wg=wg_nom,wg=wg,Kp=0.2,Ki=0.001,pitch_ini=Pitch_ini)    
+        error=observation[0]
+        actions[0] = pitch_pi(e=error,Kp=0.12,Ki=0.0008,pitch_ini=Pitch_ini) 
+        actions[1] = Tem_ini    #Torque in Nm   
         
         try:
-            action_arr = env.action_from_dict(action)
-            observation, reward, terminated, extra = env.step_abs_actions(action_arr)
-            obs_dict = env.obs_to_dict(observation)
+            observation, reward, terminated, others = env.step(actions)
         except:
             print("Error performing step")
             terminated=True
             break
-
-        wg = obs_dict["GenSpeed"]
-
+        
         #Log data every 10 steps
         if i % 10 == 0:
-            observations.append(obs_dict)
-            actions.append(action)
+            obs_dict["error"] = observation[0]
+            obs_dict["Pitch"] = observation[1]
+            obs_dict["Vx"] = observation[2]
+            act_dict["Pitch_cmd"] = actions[0]
+            act_dict["Tem_cmd"] = actions[1]
+            log_observations.append(obs_dict.copy())
+            log_actions.append(act_dict.copy())
         i+=1
         if terminated:
             print("Terminated")
             break
-
+        
     #Write observations and actions to file in CSV  
-    save_results(observations,actions)
+    save_results(log_observations,log_actions)
 
         
         

@@ -99,25 +99,26 @@ class FastGymBase(fl,gym.Env):
         )
   ## Next functions should be re-implemented in the child class  
     def map_inputs(self,actions):
-        #Pitch incremental inputs
-        minPitch = np.radians(5)
-        maxPitch = np.radians(30)
+        pitch = np.radians(actions[0])
+        Tem = actions[1]
 
-        pitch_deg = actions[0]*2*self.dt
-        new_pitch = self.inp_array[4] + np.radians(actions[0])    
-        new_pitch = np.clip(new_pitch, minPitch, maxPitch) #Clamp between min and max pitch
-        self.inp_array[4] = new_pitch
-        self.inp_array[5] = new_pitch
-        self.inp_array[6] = new_pitch       
+        self.inp_array[0] = Tem
+        self.inp_array[4] = pitch
+        self.inp_array[5] = pitch
+        self.inp_array[6] = pitch     
 
-        return [new_pitch]
+        return [pitch]
     
     def map_outputs(self, outputs):
-        gym_obs = np.array(outputs[4], dtype=np.float32)       
+        wg = outputs[4]
+        error_wg = self.wg_nom-wg
+        pitch = outputs[3]
+        Vx = outputs[1] 
+        gym_obs=[error_wg,pitch,Vx]   
         return gym_obs
- 
+   
     def reward(self,obs):
-        reward = -(self.wg_nom-obs[3])**2 
+        reward = -(obs[0])**2 
         return reward
     
     
