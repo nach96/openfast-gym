@@ -19,4 +19,4 @@ dependencies = [
 
 
 [tool.setuptools.package-data]
-"dependencies" = ["*.dll"]
+"openfast_gym.dependencies" = ["*.dll"]

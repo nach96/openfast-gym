@@ -1,7 +1,7 @@
 import numpy as np
 import gym
 from gym import spaces
-from fastlib import FastLib as fl
+from openfast_gym.fastlib import FastLib as fl
 import os
 import sys
 import ctypes.util
