@@ -9,13 +9,16 @@ import ctypes.util
 input_file_name = "G:\\Mi unidad\\0_TFM\\Concurso CEA\\Berchmark_CIC2023_CategoriaMaster\\FAST_1\\IEA-15-240-RWT-Monopile.fst"
 library_rel_path = "..\\dependencies\\openfastlib.dll"
 class FastGymBase(fl,gym.Env):
-    def __init__(self, inputFileName=input_file_name, libraryPath=library_rel_path, max_time=40, Tem_ini=1.978655e7, Pitch_ini=15.55, wg_nom=7.55, pg_nom=1.5e7):
+    def __init__(self, inputFileName=input_file_name, libraryPath=library_rel_path, max_time=40, Tem_ini=1.978655e7, Pitch_ini=15.55, wg_nom=7.55, pg_nom=1.5e7, init_time_actions=2):
         if libraryPath==library_rel_path:
             libraryPath = os.path.join(os.path.dirname(__file__), libraryPath)
             libDir = os.path.join(os.path.dirname(__file__),"..\\dependencies")
 
         super().__init__(libraryPath, inputFileName, max_time)
         self.sim_time = 0
+
+        #Time to simulate with fixed actions
+        self.init_time_actions=init_time_actions
 
         #Control variables
         self.Tem_ini = Tem_ini
@@ -42,15 +45,7 @@ class FastGymBase(fl,gym.Env):
         ) 
         """
 
-    def step(self,actions):
-        #When start, run for 1sec without training
-        while self.sim_time < 1:
-            self.inp_array[4] = np.radians(18)
-            self.inp_array[5] = np.radians(18)
-            self.inp_array[6] = np.radians(18) 
-            _error_status, _error_message = self.fast_update()
-            self.sim_time = self.sim_time + self.dt.value
-     
+    def step(self,actions):     
         #Simulate one FAST Step
         self.map_inputs(actions)        
         _error_status, _error_message = self.fast_update()     
@@ -76,6 +71,16 @@ class FastGymBase(fl,gym.Env):
         self.inp_array[4] = self.Pitch_ini
         self.inp_array[5] = self.Pitch_ini
         self.inp_array[6] = self.Pitch_ini
+
+        #When start, run for some time without training
+        if self.init_time_actions>0:
+            while self.sim_time < self.init_time_actions:
+                _error_status, _error_message = self.fast_update()
+                self.sim_time = self.sim_time + self.dt.value
+                #This is added because the log_callback runs with the reward function
+                observation = self.map_outputs(self.output_values)
+                reward = self.reward(observation)
+
         observation = self.map_outputs(self.output_values) 
         return observation       
 
