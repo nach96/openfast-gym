@@ -26,25 +26,6 @@ class FastGymBase(fl,gym.Env):
         self.wg_nom  = wg_nom
         self.pg_nom  = pg_nom
 
-
-        """
-        #1 action - pitch
-         self.action_space = spaces.Box(
-            low=-1,
-            high=1,
-            shape=(1,),
-            dtype=np.float32
-        )  
-
-        #1 observation spaces_ wg    
-        self.observation_space = spaces.Box(
-            low=0,
-            high=25,
-            shape=(1,),
-            dtype=np.float32
-        ) 
-        """
-
     def step(self,actions):     
         #Simulate one FAST Step
         self.map_inputs(actions)        
@@ -60,29 +41,7 @@ class FastGymBase(fl,gym.Env):
             reward = reward - lost_rewards
 
 
-        return observation, reward, terminate, {} #self.time      
-
-    def reset(self):
-        self.sim_time=0
-        self.fast_deinit()
-        self.fast_init()
-        self.fast_start()
-        self.inp_array[0] = self.Tem_ini
-        self.inp_array[4] = self.Pitch_ini
-        self.inp_array[5] = self.Pitch_ini
-        self.inp_array[6] = self.Pitch_ini
-
-        #When start, run for some time without training
-        if self.init_time_actions>0:
-            while self.sim_time < self.init_time_actions:
-                _error_status, _error_message = self.fast_update()
-                self.sim_time = self.sim_time + self.dt.value
-                #This is added because the log_callback runs with the reward function
-                observation = self.map_outputs(self.output_values)
-                reward = self.reward(observation)
-
-        observation = self.map_outputs(self.output_values) 
-        return observation       
+        return observation, reward, terminate, {} #self.time               
 
     def do_terminate(self):
         terminate = False
@@ -102,7 +61,20 @@ class FastGymBase(fl,gym.Env):
             high=high_obs,
             dtype=np.float32
         )
-  ## Next functions should be re-implemented in the child class  
+  ## Next functions should be re-implemented in the child class 
+    def reset(self):
+        self.sim_time=0
+        self.fast_deinit()
+        self.fast_init()
+        self.fast_start()
+        self.inp_array[0] = self.Tem_ini
+        self.inp_array[4] = self.Pitch_ini
+        self.inp_array[5] = self.Pitch_ini
+        self.inp_array[6] = self.Pitch_ini
+
+        observation = self.map_outputs(self.output_values) 
+        return observation   
+    
     def map_inputs(self,actions):
         pitch = np.radians(actions[0])
         Tem = actions[1]
